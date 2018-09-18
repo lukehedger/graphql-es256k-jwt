@@ -13,7 +13,6 @@
     "elliptic": "^6.4.1",
     "graphql": "^0.13.2",
     "graphql-tag": "^2.9.2",
-    "js-sha3": "^0.8.0",
     "jsontokens": "^0.7.8",
     "react": "^16.4.2",
     "react-apollo": "^2.1.11",
