@@ -1,0 +1,37 @@
+{
+  "name": "graphql-es256k-jwt-client",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "webpack-dev-server --mode development"
+  },
+  "dependencies": {
+    "apollo-cache-inmemory": "^1.2.7",
+    "apollo-client": "^2.3.8",
+    "apollo-link-http": "^1.5.4",
+    "crypto-random-string": "^1.0.0",
+    "elliptic": "^6.4.1",
+    "graphql": "^0.13.2",
+    "graphql-tag": "^2.9.2",
+    "js-sha3": "^0.8.0",
+    "jsontokens": "^0.7.8",
+    "react": "^16.4.2",
+    "react-apollo": "^2.1.11",
+    "react-dom": "^16.4.2"
+  },
+  "devDependencies": {
+    "@vxna/mini-html-webpack-template": "^0.1.7",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^8.2.6",
+    "babel-loader": "^7.1.5",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-3": "^6.24.1",
+    "clean-webpack-plugin": "^0.1.19",
+    "mini-html-webpack-plugin": "^0.2.3",
+    "webpack": "^4.16.5",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.5"
+  }
+}

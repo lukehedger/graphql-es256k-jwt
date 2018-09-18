@@ -1,0 +1,15 @@
+{
+  "name": "graphql-es256k-jwt-server",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "nodemon --watch ./ ./"
+  },
+  "dependencies": {
+    "graphql-yoga": "^1.16.2",
+    "jsontokens": "^0.7.8"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.4"
+  }
+}
