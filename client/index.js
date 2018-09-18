@@ -3,8 +3,9 @@ import { ApolloClient } from 'apollo-client'
 import { ApolloLink } from 'apollo-link'
 import { createHttpLink } from 'apollo-link-http'
 import { ec } from 'elliptic'
+import { print } from 'graphql/language/printer'
 import gql from 'graphql-tag'
-import { TokenSigner } from 'jsontokens'
+import { decodeToken, TokenSigner } from 'jsontokens'
 import React from 'react'
 import { ApolloProvider, Query } from 'react-apollo'
 import ReactDOM from 'react-dom'
@@ -25,14 +26,16 @@ const authLink = new ApolloLink((operation, forward) => {
         kid: publicKey,
         typ: 'JWT',
       },
-      payload: operation,
+      payload: {
+        operationName: operation.operationName,
+        query: print(operation.query),
+        variables: operation.variables,
+      },
     })
 
-    // set request header
-    operation.setContext(({ headers }) => ({
-      headers: {
-        authorization: `Bearer ${token}`,
-      },
+    // set token context
+    operation.setContext(({}) => ({
+      token: token,
     }))
 
     return forward(operation)
@@ -41,11 +44,60 @@ const authLink = new ApolloLink((operation, forward) => {
   }
 })
 
+const createHttpJwtLink = opts => new ApolloLink((operation, forward) => {
+  const context = operation.getContext()
+
+  return new Observable(observer => {
+    fetch(opts.uri, {
+      body: JSON.stringify(decodeToken(context.token)),
+      headers: Object.assign(
+        {},
+        {
+          accept: '*/*',
+          authorization: `Bearer ${context.token}`,
+          'content-type': 'application/jose+json',
+        },
+        context.headers,
+      ),
+      method: 'POST',
+    })
+      .then(response => {
+        operation.setContext({ response })
+
+        return response
+      })
+      .then(response => {
+        return response.text()
+          .then(bodyText => {
+            try {
+              return JSON.parse(bodyText)
+            } catch (err) {
+              return Promise.reject(err)
+            }
+          })
+      })
+      .then(result => {
+        observer.next(result)
+
+        observer.complete()
+
+        return result
+      })
+      .catch(err => {
+        if (err.result && err.result.errors && err.result.data) {
+          observer.next(err.result)
+        }
+
+        observer.error(err)
+      })
+  })
+})
+
 const client = new ApolloClient({
   cache: new InMemoryCache(),
   link: ApolloLink.from([
     authLink,
-    createHttpLink({
+    createHttpJwtLink({
       uri: 'http://localhost:4000/',
     }),
   ])
