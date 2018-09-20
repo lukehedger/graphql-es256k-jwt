@@ -2,6 +2,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory'
 import { ApolloClient } from 'apollo-client'
 import { ApolloLink } from 'apollo-link'
 import { createHttpLink } from 'apollo-link-http'
+import base64url from 'base64url'
 import { ec } from 'elliptic'
 import { print } from 'graphql/language/printer'
 import gql from 'graphql-tag'
@@ -17,13 +18,19 @@ const authLink = new ApolloLink((operation, forward) => {
     // generate ECDSA keys
     const keys = elliptic.genKeyPair()
     const privateKey = keys.getPrivate('hex')
-    const publicKey = keys.getPublic('hex')
+    const publicKey = keys.getPublic()
 
     // generate JSON Web Token
     const token = new TokenSigner('ES256K', privateKey).sign({
+      // TODO - change to `protected` - need to extend jsontokens
       header: {
         alg: 'ES256K',
-        kid: publicKey,
+        jwk: {
+          kty: 'EC',
+          crv: 'P-256K',
+          x: base64url.encode(publicKey.getX().toBuffer()),
+          y: base64url.encode(publicKey.getY().toBuffer()),
+        },
         typ: 'JWT',
       },
       payload: {
@@ -49,13 +56,12 @@ const createHttpJwtLink = opts => new ApolloLink((operation, forward) => {
 
   return new Observable(observer => {
     fetch(opts.uri, {
-      body: JSON.stringify(decodeToken(context.token)),
+      body: context.token,
       headers: Object.assign(
         {},
         {
           accept: '*/*',
-          authorization: `Bearer ${context.token}`,
-          'content-type': 'application/jose+json',
+          'content-type': 'application/jose',
         },
         context.headers,
       ),
@@ -98,7 +104,7 @@ const client = new ApolloClient({
   link: ApolloLink.from([
     authLink,
     createHttpJwtLink({
-      uri: 'http://localhost:4000/',
+      uri: 'http://localhost:5000/api/graphql/',
     }),
   ])
 })
